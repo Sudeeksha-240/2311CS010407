@@ -1,69 +1,66 @@
-import { useState } from "react";
-import useNotifications from "../hooks/useNotifications";
-import NotificationFilter from "../components/NotificationFilter";
+import { useEffect, useState } from "react";
+import { fetchNotifications } from "../api/notifications.js";
+import { Log } from "../logger.js";
 
-const NotificationsPage = () => {
-  const {
-    notifications,
-    priorityNotifications,
-  } = useNotifications();
+function NotificationsPage() {
+  const [notifications, setNotifications] = useState([]);
 
-  const [selectedType, setSelectedType] =
-    useState("All");
+  useEffect(() => {
+    loadNotifications();
+  }, []);
 
-  const filteredNotifications =
-    selectedType === "All"
-      ? notifications
-      : notifications.filter(
-          (item) => item.Type === selectedType
-        );
+  async function loadNotifications() {
+    try {
+      await Log(
+        "frontend",
+        "info",
+        "page",
+        "Notifications page loaded"
+      );
+
+      const data = await fetchNotifications(1, 10);
+
+      setNotifications(data);
+
+      await Log(
+        "frontend",
+        "info",
+        "state",
+        "Notifications state updated"
+      );
+    } catch (error) {
+      await Log(
+        "frontend",
+        "error",
+        "page",
+        error.message
+      );
+    }
+  }
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>Campus Notifications</h1>
 
-      <NotificationFilter
-        selectedType={selectedType}
-        setSelectedType={setSelectedType}
-      />
-
-      <h2>Top 10 Priority Notifications</h2>
-
-      {priorityNotifications.map((item) => (
+      {notifications.map((item) => (
         <div
           key={item.ID}
           style={{
-            background: "white",
+            border: "1px solid #ccc",
+            marginBottom: "10px",
             padding: "10px",
-            margin: "10px 0",
-            borderRadius: "5px",
+            borderRadius: "8px",
           }}
         >
           <h3>{item.Type}</h3>
-          <p>{item.Message}</p>
-          <small>{item.Timestamp}</small>
-        </div>
-      ))}
 
-      <h2>All Notifications</h2>
-
-      {filteredNotifications.map((item) => (
-        <div
-          key={item.ID}
-          style={{
-            background: "white",
-            padding: "10px",
-            margin: "10px 0",
-            borderRadius: "5px",
-          }}
-        >
-          <h3>{item.Type}</h3>
           <p>{item.Message}</p>
+
           <small>{item.Timestamp}</small>
         </div>
       ))}
     </div>
   );
-};
+}
 
 export default NotificationsPage;

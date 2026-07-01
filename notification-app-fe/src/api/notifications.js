@@ -1,47 +1,58 @@
-const BASE_URL = "http://4.224.186.213";
+import { Log } from "../logger.js";
 
-async function getAuthToken() {
-  const response = await fetch(`${BASE_URL}/auth`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: "2311cs010407@mallareddyuniversity.ac.in",
-      name: "mamidi sudeeksha",
-      rollNo: "2311cs010407",
-      accessCode: "xpQddd",
-      clientID: import.meta.env.VITE_CLIENT_ID,
-      clientSecret: import.meta.env.VITE_CLIENT_SECRET,
-    }),
-  });
+const BASE_URL = "http://4.224.186.213/evaluation-service";
 
-  if (!response.ok) {
-    throw new Error("Authentication failed");
-  }
+export async function fetchNotifications(
+  page = 1,
+  limit = 10,
+  type = ""
+) {
+  try {
+    await Log(
+      "frontend",
+      "info",
+      "api",
+      "Fetching notifications"
+    );
 
-  const data = await response.json();
+    let apiUrl =
+      `${BASE_URL}/notifications?page=${page}&limit=${limit}`;
 
-  return data.access_token;
-}
-
-export async function fetchNotifications() {
-  const token = await getAuthToken();
-
-  const response = await fetch(
-    `${BASE_URL}/evaluation-service/notifications`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    if (type && type !== "All") {
+      apiUrl += `&notification_type=${type}`;
     }
-  );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch notifications");
+    const response = await fetch(apiUrl, {
+      method: "GET",
+
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AUTH_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch notifications");
+    }
+
+    const data = await response.json();
+
+    await Log(
+      "frontend",
+      "info",
+      "api",
+      "Notifications fetched successfully"
+    );
+
+    return data.notifications || [];
+  } catch (error) {
+    await Log(
+      "frontend",
+      "error",
+      "api",
+      error.message
+    );
+
+    throw error;
   }
-
-  const data = await response.json();
-
-  return data.notifications || [];
 }
