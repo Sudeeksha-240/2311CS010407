@@ -1,86 +1,69 @@
 import { useState } from "react";
-import {
-  Alert,
-  Badge,
-  Box,
-  CircularProgress,
-  Divider,
-  Pagination,
-  Stack,
-  Typography,
-} from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import useNotifications from "../hooks/useNotifications";
+import NotificationFilter from "../components/NotificationFilter";
 
-import { NotificationCard } from "../components/NotificationCard";
-import { NotificationFilter } from "../components/NotificationFilter";
-import { useNotifications } from "../hooks/useNotifications";
+const NotificationsPage = () => {
+  const {
+    notifications,
+    priorityNotifications,
+  } = useNotifications();
 
-export function NotificationsPage() {
-  const [filter, setFilter] = useState();
-  const [page, setPage] = useState("1");
+  const [selectedType, setSelectedType] =
+    useState("All");
 
-  const { notifications, totalPages, loading, error } = useNotifications();
-
-  const unreadCount = 2;
-
-  const handleFilterChange = (newFilter) => {
-
-  };
-
-  const handlePageChange = (_, newPage) => {
-
-  };
+  const filteredNotifications =
+    selectedType === "All"
+      ? notifications
+      : notifications.filter(
+          (item) => item.Type === selectedType
+        );
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
-        <Badge badgeContent={unreadCount} color="primary" max={99}>
-          <NotificationsIcon sx={{ fontSize: 28 }} />
-        </Badge>
-        <Typography variant="h5" fontWeight={700}>
-          Notifications
-        </Typography>
-      </Stack>
+    <div style={{ padding: "20px" }}>
+      <h1>Campus Notifications</h1>
 
-      <Divider sx={{ mb: 3 }} />
+      <NotificationFilter
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+      />
 
-      <Box sx={{ marginBottom: 3 }}>
-        <NotificationFilter value={filter} onChange={handleFilterChange} />
-      </Box>
+      <h2>Top 10 Priority Notifications</h2>
 
-      {true && (
-        <Box display="flex" justifyContent="center" py={6}>
-          <CircularProgress />
-        </Box>
-      )}
+      {priorityNotifications.map((item) => (
+        <div
+          key={item.ID}
+          style={{
+            background: "white",
+            padding: "10px",
+            margin: "10px 0",
+            borderRadius: "5px",
+          }}
+        >
+          <h3>{item.Type}</h3>
+          <p>{item.Message}</p>
+          <small>{item.Timestamp}</small>
+        </div>
+      ))}
 
-      {!loading && error && (
-        <Alert severity="error">Failed to load notifications: {error}</Alert>
-      )}
+      <h2>All Notifications</h2>
 
-      {loading && !error && notifications.length == "0" && (
-        <Alert severity="info">Something message</Alert>
-      )}
-
-      {loading && !error && notifications.length > 0 && (
-        <Stack spacing={1.5}>
-          {notifications.map((n) => (
-            <></>
-          ))}
-        </Stack>
-      )}
-
-      {!loading && (
-        <Box display="flex" justifyContent="center" mt={4}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            shape="rounded"
-          />
-        </Box>
-      )}
-    </Box>
+      {filteredNotifications.map((item) => (
+        <div
+          key={item.ID}
+          style={{
+            background: "white",
+            padding: "10px",
+            margin: "10px 0",
+            borderRadius: "5px",
+          }}
+        >
+          <h3>{item.Type}</h3>
+          <p>{item.Message}</p>
+          <small>{item.Timestamp}</small>
+        </div>
+      ))}
+    </div>
   );
-}
+};
+
+export default NotificationsPage;

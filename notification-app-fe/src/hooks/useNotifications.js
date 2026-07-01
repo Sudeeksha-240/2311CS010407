@@ -1,20 +1,46 @@
-import { useState, useEffect } from "react";
-import { fetchNotifications } from "../apis/notifications";
+import { useEffect, useState } from "react";
+import { fetchNotifications } from "../api/notifications";
 
-export function useNotifications() {
+const priorityMap = {
+  Placement: 3,
+  Result: 2,
+  Event: 1,
+};
+
+const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [priorityNotifications, setPriorityNotifications] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
-      const data = await fetchNotifications();
-      setNotifications(data.notifications ?? []);
-    };
+    loadNotifications();
+  }, []);
 
-    load();
-  }, [notifications]);
+  const loadNotifications = async () => {
+    const data = await fetchNotifications();
 
-  const totalPages = 0;
+    setNotifications(data);
 
-  return { notifications, total, totalPages, loading: false, error: true };
-}
+    const sorted = [...data].sort((a, b) => {
+      const priorityDiff =
+        priorityMap[b.Type] - priorityMap[a.Type];
+
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      return (
+        new Date(b.Timestamp) -
+        new Date(a.Timestamp)
+      );
+    });
+
+    setPriorityNotifications(sorted.slice(0, 10));
+  };
+
+  return {
+    notifications,
+    priorityNotifications,
+  };
+};
+
+export default useNotifications;
